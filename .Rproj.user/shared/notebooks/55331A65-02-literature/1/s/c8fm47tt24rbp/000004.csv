@@ -1,0 +1,6 @@
+"0","knitr::opts_chunk$set(eval = FALSE, echo = TRUE)"
+"0",""
+"0","reach_attributes <- read.csv(""NHD_US_drainage.csv"", stringsAsFactors = FALSE)"
+"0",""
+"0","dbWriteTable(St.Vrain_db, ""reach_attributes"", reach_attributes, append = TRUE)"
+"0",""

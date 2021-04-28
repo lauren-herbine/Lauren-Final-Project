@@ -1,0 +1,233 @@
+# Analysis by EcoRegion
+
+## EcoRegions by elevation
+![EcoRegions within the St. Vrain Watershed](ecoregions drawn.png)
+I want to break out my data by these EcoRegions. To do this I have determined the approximate, average elevation at each boundary. I mutate the table to give me an "ecoregions" column:
+
+```{r table with ecoregions, eval=TRUE, echo=TRUE}
+
+reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  mutate(ecoregion = case_when(max_elev > 3048 ~ "Alpine",
+                              max_elev <= 3048 & max_elev > 2804 ~ "Subalpine Forest",
+                                max_elev <= 2804 & max_elev > 2072 ~ "Mid-Elevation Forest",
+                              max_elev <= 2072 & max_elev > 1706 ~ "Foothill Shrub",
+                              max_elev <=1706 & max_elev > 1524 ~ "Front Range Fans",
+                              max_elev <= 1524 ~ "Plains")) %>% 
+  select(FID, max_elev, ecoregion) %>% 
+  slice_sample(n=10) %>% 
+  knitr::kable(align = "c")
+  
+```
+
+
+### Slope vs. Bankfull width
+
+How do slope and bankfull width relate? I have filtered out slopes less than 0 and greater than 9 to reduce the noise. 
+
+
+```{r ggridges graph, eval=TRUE, echo=TRUE}
+reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0 & Slope > 0 & Slope < 9) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  mutate(ecoregion = case_when(max_elev > 3048 ~ "Alpine",
+                              max_elev <= 3048 & max_elev > 2804 ~ "Subalpine Forest",
+                                max_elev <= 2804 & max_elev > 2072 ~ "Mid-Elevation Forest",
+                              max_elev <= 2072 & max_elev > 1706 ~ "Foothill Shrub",
+                              max_elev <=1706 & max_elev > 1524 ~ "Front Range Fans",
+                              max_elev <= 1524 ~ "Plains")) %>% 
+  ggplot(aes(x = BFwidth, y = Slope, color = ecoregion)) +
+  geom_point() +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  labs(y = "Slope", x = "Bankfull width (m)", color = "EcoRegion") +
+theme(legend.position = "bottom")
+
+```
+
+It doesn't make a lot of sense for a river to suddenly jump from a bankfull width of ~ 24 ft to ~46 ft. This could be due to the fact that many of the reaches in the urbanized and heavily manipulated lower regions of the watershed are considered "out of network" and therefore have been filtered out. For the purposes of this project, I further filter out those largest bankfull widths:
+
+
+```{r less bf, eval=TRUE, echo=TRUE}
+reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0 &
+           Slope > 0 & Slope < 9
+         & BFwidth < 25) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  mutate(ecoregion = case_when(max_elev > 3048 ~ "Alpine",
+                              max_elev <= 3048 & max_elev > 2804 ~ "Subalpine Forest",
+                                max_elev <= 2804 & max_elev > 2072 ~ "Mid-Elevation Forest",
+                              max_elev <= 2072 & max_elev > 1706 ~ "Foothill Shrub",
+                              max_elev <=1706 & max_elev > 1524 ~ "Front Range Fans",
+                              max_elev <= 1524 ~ "Plains")) %>% 
+  ggplot(aes(x = BFwidth, y = Slope, color = ecoregion)) +
+  geom_point() +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  labs(y = "Slope", x = "Bankfull width (m)", color = "EcoRegion") +
+theme(legend.position = "bottom")
+```
+
+Though they are different colors, it is kind of hard to tell what is going on between the ecoregions, so I am going to pull each region out into its own plot:  
+
+```{r alpine, eval=TRUE, echo=TRUE}
+reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0 &
+           Slope > 0 & Slope < 9
+         & BFwidth < 25) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  mutate(ecoregion = case_when(max_elev > 3048 ~ "Alpine",
+                              max_elev <= 3048 & max_elev > 2804 ~ "Subalpine Forest",
+                                max_elev <= 2804 & max_elev > 2072 ~ "Mid-Elevation Forest",
+                              max_elev <= 2072 & max_elev > 1706 ~ "Foothill Shrub",
+                              max_elev <=1706 & max_elev > 1524 ~ "Front Range Fans",
+                              max_elev <= 1524 ~ "Plains")) %>% 
+  filter(ecoregion == "Alpine") %>% 
+  ggplot(aes(x = BFwidth, y = Slope, color = ecoregion)) +
+  geom_point() +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  labs(title = "Alpine", y = "Slope", x = "Bankfull width (m)", color = "EcoRegion") +
+theme(legend.position = "none")
+```
+
+I'll do this for the rest of the ecoregions and then stack the plots:
+
+
+```{r all regions, eval=TRUE, echo=TRUE, warning=FALSE}
+alp <- reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0 &
+           Slope > 0 & Slope < 9
+         & BFwidth < 25) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  mutate(ecoregion = case_when(max_elev > 3048 ~ "Alpine",
+                              max_elev <= 3048 & max_elev > 2804 ~ "Subalpine Forest",
+                                max_elev <= 2804 & max_elev > 2072 ~ "Mid-Elevation Forest",
+                              max_elev <= 2072 & max_elev > 1706 ~ "Foothill Shrub",
+                              max_elev <=1706 & max_elev > 1524 ~ "Front Range Fans",
+                              max_elev <= 1524 ~ "Plains")) %>% 
+  filter(ecoregion == "Alpine") %>% 
+  ggplot(aes(x = BFwidth, y = Slope, color = ecoregion)) +
+  geom_point() +
+  xlim(0, 25) + ylim(0, 1.5) +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  labs(title = "Alpine", y = "Slope", x = "Bankfull width (m)", color = "EcoRegion") +
+theme(legend.position = "none")
+
+saf <- reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0 &
+           Slope > 0 & Slope < 9
+         & BFwidth < 25) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  mutate(ecoregion = case_when(max_elev > 3048 ~ "Alpine",
+                              max_elev <= 3048 & max_elev > 2804 ~ "Subalpine Forest",
+                                max_elev <= 2804 & max_elev > 2072 ~ "Mid-Elevation Forest",
+                              max_elev <= 2072 & max_elev > 1706 ~ "Foothill Shrub",
+                              max_elev <=1706 & max_elev > 1524 ~ "Front Range Fans",
+                              max_elev <= 1524 ~ "Plains")) %>% 
+  filter(ecoregion == "Subalpine Forest") %>% 
+  ggplot(aes(x = BFwidth, y = Slope, color = ecoregion)) +
+  geom_point() +
+  xlim(0, 25) + ylim(0, 1.5) +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  labs(title = "Subalpine Forest", y = "Slope", x = "Bankfull width (m)", color = "EcoRegion") +
+theme(legend.position = "none")
+
+mef <- reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0 &
+           Slope > 0 & Slope < 9
+         & BFwidth < 25) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  mutate(ecoregion = case_when(max_elev > 3048 ~ "Alpine",
+                              max_elev <= 3048 & max_elev > 2804 ~ "Subalpine Forest",
+                                max_elev <= 2804 & max_elev > 2072 ~ "Mid-Elevation Forest",
+                              max_elev <= 2072 & max_elev > 1706 ~ "Foothill Shrub",
+                              max_elev <=1706 & max_elev > 1524 ~ "Front Range Fans",
+                              max_elev <= 1524 ~ "Plains")) %>% 
+  filter(ecoregion == "Mid-Elevation Forest") %>% 
+  ggplot(aes(x = BFwidth, y = Slope, color = ecoregion)) +
+  geom_point() +
+  xlim(0, 25) + ylim(0, 1.5) +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  labs(title = "Mid-Elevation Forest", y = "Slope", x = "Bankfull width (m)", color = "EcoRegion") +
+theme(legend.position = "none")
+
+fs <- reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0 &
+           Slope > 0 & Slope < 9
+         & BFwidth < 25) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  mutate(ecoregion = case_when(max_elev > 3048 ~ "Alpine",
+                              max_elev <= 3048 & max_elev > 2804 ~ "Subalpine Forest",
+                                max_elev <= 2804 & max_elev > 2072 ~ "Mid-Elevation Forest",
+                              max_elev <= 2072 & max_elev > 1706 ~ "Foothill Shrub",
+                              max_elev <=1706 & max_elev > 1524 ~ "Front Range Fans",
+                              max_elev <= 1524 ~ "Plains")) %>% 
+  filter(ecoregion == "Foothill Shrub") %>% 
+  ggplot(aes(x = BFwidth, y = Slope, color = ecoregion)) +
+  geom_point() +
+  xlim(0, 25) + ylim(0, 1.5) +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  labs(title = "Foothill Shrub", y = "Slope", x = "Bankfull width (m)", color = "EcoRegion") +
+theme(legend.position = "none")
+
+frf <- reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0 &
+           Slope > 0 & Slope < 9
+         & BFwidth < 25) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  mutate(ecoregion = case_when(max_elev > 3048 ~ "Alpine",
+                              max_elev <= 3048 & max_elev > 2804 ~ "Subalpine Forest",
+                                max_elev <= 2804 & max_elev > 2072 ~ "Mid-Elevation Forest",
+                              max_elev <= 2072 & max_elev > 1706 ~ "Foothill Shrub",
+                              max_elev <=1706 & max_elev > 1524 ~ "Front Range Fans",
+                              max_elev <= 1524 ~ "Plains")) %>% 
+  filter(ecoregion == "Front Range Fans") %>% 
+  ggplot(aes(x = BFwidth, y = Slope, color = ecoregion)) +
+  geom_point() +
+  xlim(0, 25) + ylim(0, 1.5) +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  labs(title = "Front Range Fans", y = "Slope", x = "Bankfull width (m)", color = "EcoRegion") +
+theme(legend.position = "none")
+
+plns <- reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0 &
+           Slope > 0 & Slope < 9
+         & BFwidth < 25) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  mutate(ecoregion = case_when(max_elev > 3048 ~ "Alpine",
+                              max_elev <= 3048 & max_elev > 2804 ~ "Subalpine Forest",
+                                max_elev <= 2804 & max_elev > 2072 ~ "Mid-Elevation Forest",
+                              max_elev <= 2072 & max_elev > 1706 ~ "Foothill Shrub",
+                              max_elev <=1706 & max_elev > 1524 ~ "Front Range Fans",
+                              max_elev <= 1524 ~ "Plains")) %>% 
+  filter(ecoregion == "Plains") %>% 
+  ggplot(aes(x = BFwidth, y = Slope, color = ecoregion)) +
+  geom_point() +
+  xlim(0, 25) + ylim(0, 1.5) +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  labs(title = "Plains", y = "Slope", x = "Bankfull width (m)", color = "EcoRegion") +
+theme(legend.position = "none")
+
+(alp|saf)/(mef|fs)/(frf|plns)
+
+```
+
+

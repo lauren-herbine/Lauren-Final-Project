@@ -1,0 +1,155 @@
+# Summary
+
+The St. Vrain Watershed is representative of many Colorado Front Range basins. Starting in protected, alpine reaches, it ends up winding through the flat to rolling plains, reaching almost 25 meters in width in some reaches.
+These visualizations make it easy to see how bankfull width and slope are related in different portions of the catchment. By breaking this data out by EcoRegion, interesting trends an anomalies are more apparent and can provide a jumping off point for future investigation.
+
+```{r all regions 2, eval=TRUE, echo=FALSE, warning=FALSE}
+alp <- reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0 &
+           Slope > 0 & Slope < 9
+         & BFwidth < 25) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  mutate(ecoregion = case_when(max_elev > 3048 ~ "Alpine",
+                              max_elev <= 3048 & max_elev > 2804 ~ "Subalpine Forest",
+                                max_elev <= 2804 & max_elev > 2072 ~ "Mid-Elevation Forest",
+                              max_elev <= 2072 & max_elev > 1706 ~ "Foothill Shrub",
+                              max_elev <=1706 & max_elev > 1524 ~ "Front Range Fans",
+                              max_elev <= 1524 ~ "Plains")) %>% 
+  filter(ecoregion == "Alpine") %>% 
+  ggplot(aes(x = BFwidth, y = Slope, color = ecoregion)) +
+  geom_point() +
+  xlim(0, 25) + ylim(0, 1.5) +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  labs(title = "Alpine", y = "Slope", x = "Bankfull width (m)", color = "EcoRegion") +
+theme(legend.position = "none")
+
+saf <- reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0 &
+           Slope > 0 & Slope < 9
+         & BFwidth < 25) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  mutate(ecoregion = case_when(max_elev > 3048 ~ "Alpine",
+                              max_elev <= 3048 & max_elev > 2804 ~ "Subalpine Forest",
+                                max_elev <= 2804 & max_elev > 2072 ~ "Mid-Elevation Forest",
+                              max_elev <= 2072 & max_elev > 1706 ~ "Foothill Shrub",
+                              max_elev <=1706 & max_elev > 1524 ~ "Front Range Fans",
+                              max_elev <= 1524 ~ "Plains")) %>% 
+  filter(ecoregion == "Subalpine Forest") %>% 
+  ggplot(aes(x = BFwidth, y = Slope, color = ecoregion)) +
+  geom_point() +
+  xlim(0, 25) + ylim(0, 1.5) +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  labs(title = "Subalpine Forest", y = "Slope", x = "Bankfull width (m)", color = "EcoRegion") +
+theme(legend.position = "none")
+
+mef <- reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0 &
+           Slope > 0 & Slope < 9
+         & BFwidth < 25) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  mutate(ecoregion = case_when(max_elev > 3048 ~ "Alpine",
+                              max_elev <= 3048 & max_elev > 2804 ~ "Subalpine Forest",
+                                max_elev <= 2804 & max_elev > 2072 ~ "Mid-Elevation Forest",
+                              max_elev <= 2072 & max_elev > 1706 ~ "Foothill Shrub",
+                              max_elev <=1706 & max_elev > 1524 ~ "Front Range Fans",
+                              max_elev <= 1524 ~ "Plains")) %>% 
+  filter(ecoregion == "Mid-Elevation Forest") %>% 
+  ggplot(aes(x = BFwidth, y = Slope, color = ecoregion)) +
+  geom_point() +
+  xlim(0, 25) + ylim(0, 1.5) +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  labs(title = "Mid-Elevation Forest", y = "Slope", x = "Bankfull width (m)", color = "EcoRegion") +
+theme(legend.position = "none")
+
+fs <- reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0 &
+           Slope > 0 & Slope < 9
+         & BFwidth < 25) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  mutate(ecoregion = case_when(max_elev > 3048 ~ "Alpine",
+                              max_elev <= 3048 & max_elev > 2804 ~ "Subalpine Forest",
+                                max_elev <= 2804 & max_elev > 2072 ~ "Mid-Elevation Forest",
+                              max_elev <= 2072 & max_elev > 1706 ~ "Foothill Shrub",
+                              max_elev <=1706 & max_elev > 1524 ~ "Front Range Fans",
+                              max_elev <= 1524 ~ "Plains")) %>% 
+  filter(ecoregion == "Foothill Shrub") %>% 
+  ggplot(aes(x = BFwidth, y = Slope, color = ecoregion)) +
+  geom_point() +
+  xlim(0, 25) + ylim(0, 1.5) +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  labs(title = "Foothill Shrub", y = "Slope", x = "Bankfull width (m)", color = "EcoRegion") +
+theme(legend.position = "none")
+
+frf <- reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0 &
+           Slope > 0 & Slope < 9
+         & BFwidth < 25) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  mutate(ecoregion = case_when(max_elev > 3048 ~ "Alpine",
+                              max_elev <= 3048 & max_elev > 2804 ~ "Subalpine Forest",
+                                max_elev <= 2804 & max_elev > 2072 ~ "Mid-Elevation Forest",
+                              max_elev <= 2072 & max_elev > 1706 ~ "Foothill Shrub",
+                              max_elev <=1706 & max_elev > 1524 ~ "Front Range Fans",
+                              max_elev <= 1524 ~ "Plains")) %>% 
+  filter(ecoregion == "Front Range Fans") %>% 
+  ggplot(aes(x = BFwidth, y = Slope, color = ecoregion)) +
+  geom_point() +
+  xlim(0, 25) + ylim(0, 1.5) +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  labs(title = "Front Range Fans", y = "Slope", x = "Bankfull width (m)", color = "EcoRegion") +
+theme(legend.position = "none")
+
+plns <- reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0 &
+           Slope > 0 & Slope < 9
+         & BFwidth < 25) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  mutate(ecoregion = case_when(max_elev > 3048 ~ "Alpine",
+                              max_elev <= 3048 & max_elev > 2804 ~ "Subalpine Forest",
+                                max_elev <= 2804 & max_elev > 2072 ~ "Mid-Elevation Forest",
+                              max_elev <= 2072 & max_elev > 1706 ~ "Foothill Shrub",
+                              max_elev <=1706 & max_elev > 1524 ~ "Front Range Fans",
+                              max_elev <= 1524 ~ "Plains")) %>% 
+  filter(ecoregion == "Plains") %>% 
+  ggplot(aes(x = BFwidth, y = Slope, color = ecoregion)) +
+  geom_point() +
+  xlim(0, 25) + ylim(0, 1.5) +
+  scale_fill_viridis_d() +
+  theme_minimal() +
+  labs(title = "Plains", y = "Slope", x = "Bankfull width (m)", color = "EcoRegion") +
+theme(legend.position = "none")
+
+(alp|saf)/(mef|fs)/(frf|plns)
+
+```
+
+```{r summary, eval=TRUE, echo=FALSE}
+reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0 & BFwidth < 30) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  ggplot() + 
+  geom_point(aes(y = max_elev, x = BFwidth, color = TotDASqKm, size = TotDASqKm)) +
+  guides(color = guide_legend(), size = guide_legend()) +
+  theme_minimal() +
+  labs(fill = 'Total Upstream Drainage Area (sqKm)',
+       y = 'Max Elevation (m)', 
+       x = 'Bankfull Width (m)', 
+       color = 'Total Upstream Drainage Area (sqKm)', 
+       size = 'Total Upstream Drainage Area (sqKm)') +
+  scale_color_viridis(option = "viridis") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+```
+

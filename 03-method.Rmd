@@ -1,0 +1,80 @@
+# Basin Morphometric Visualizations
+
+## A little data prep
+
+1. First I want to work only with stream segments that are "in network," meaning they aren't man made diversions or channels. In the data, this is signaled by assigning a "1" instead of a "0." 
+
+2. I also want to get rid of a couple of reaches that were assigned elevations of "-9998." I do this by filtering for a maximum elevation of greater than 0. 
+
+3. "MaxElevSmo" and "MinElevSmo" refer to elevations that are smoothed (as opposed to raw). They are in centimeters, which I don't think is very intuitive to work with, so I am going to transform them into meters. 
+
+```{r table with in network, eval=TRUE, echo=TRUE}
+
+reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  select(FID, LengthKM, TotDASqKm, Slope, BFwidth, max_elev, min_elev) %>% 
+    slice_sample(n=10) %>% 
+  knitr::kable(align = "c")
+```
+  
+## Bankfull width, elevation, and total upstream drainage area
+
+How does the distribution of bankfull widths (the width of the channel just before it reaches overbank stage) change as one moves down the catchment? And just for kicks, does total upstream drainage area follow the same trend?
+
+### Bankful width vs. elevation
+_with total upstream drainage area thrown in for some visual ~spice~_
+  
+```{r first visualization, eval=TRUE, echo=TRUE}
+reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0 & BFwidth < 30) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  ggplot() + 
+  geom_point(aes(y = max_elev, x = BFwidth, color = TotDASqKm, size = TotDASqKm)) +
+  guides(color = guide_legend(), size = guide_legend()) +
+  theme_minimal() +
+  labs(fill = 'Total Upstream Drainage Area (sqKm)',
+       y = 'Max Elevation (m)', 
+       x = 'Bankfull Width (m)', 
+       color = 'Total Upstream Drainage Area (sqKm)', 
+       size = 'Total Upstream Drainage Area (sqKm)') +
+  scale_color_viridis(option = "viridis") +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+```
+ As seen in the figure above, bankfull width increases as elevation decreases, which is to be expected. High elevation headwater reaches will generally be narrow, sometimes intermittent channels. As one moves down the catchment and these headwater reaches become 2nd, 3rd, 4th order and higher streams, their bankfull widths will widen to accomodate the increasing water volume. It is important to note that there are small channels at all elevations (the thick band of data points on the left of the graph spanning elevations from <1500 m to >4000 m), but that wider channels only occur at decreasingly lower elevations. 
+
+Some interesting things to note:
+
+1. The highest elevation bankfull width is not the narrowest bankfull width
+
+2. As expected, total upstream drainage area increases as elevation decreases
+
+3. As expected, total upstream drainage area increases as bankfull width increases (also see below graph)
+
+4. This figure is similar to an elevation profile of all of the streams within the catchment, with bankfull width replacing distance downstream. Though not a direct correlation, this is because most channels are wider the further down a catchment you get (refer back to the observation about small channels being present at all elevations, though).  
+
+### Bankfull width vs. total upstream drainage area
+
+```{r second visualization, eval=TRUE, echo=TRUE}
+reach_attributes %>% 
+  filter(InNetwork == 1 & MaxElevSmo > 0 & BFwidth < 30) %>% 
+  mutate(max_elev = MaxElevSmo/100) %>% 
+  mutate(min_elev = MInElevSmo/100) %>% 
+  ggplot() +
+  geom_point(aes(y = TotDASqKm, x = BFwidth, color = max_elev,)) +
+  labs(fill = 'Total Upstream Drainage Area (sqKm)',
+       y = 'Total Upstream Drainage Area (sqKm)', 
+       x = 'Bankfull Width (m)',
+       color = 'Maximum elevation of reach') +
+  scale_color_viridis() +
+  guides(color = guide_legend()) +
+  theme_minimal() +
+  theme(legend.position = "bottom")
+
+```
+  
+  The perfect correlation seen here could be due to a calculation method used by NHD+ to determine total upstream drainage area. This seems *too* perfect. 

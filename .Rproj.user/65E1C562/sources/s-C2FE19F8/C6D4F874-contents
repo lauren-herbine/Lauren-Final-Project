@@ -1,0 +1,102 @@
+# Database Creation
+
+
+## Building the database
+
+Load the packages necessary:
+```{r packages, eval=TRUE, echo=TRUE}
+library(DBI)
+library(tidyverse)
+library(viridis)
+library(patchwork)
+library(lubridate)
+library(ggplot2)
+library(ggridges)
+library(RSQLite)
+```
+
+## Establish a database connection
+
+This will also create a new database
+
+```{r establish connection, eval=FALSE, echo=TRUE}
+St.Vrain_db <- dbConnect(RSQLite::SQLite(), "St.Vrain.db")
+```
+
+I now have a database called "St.Vrain.db" ready for tables and data.
+
+## Retreiving the data
+
+To begin creating this database, I first downloaded the [Riverscapes Context project](https://data.riverscapes.xyz/) for the St. Vrain Creek HUC level 8 (10190005). The NHD+ geodatabase is nested in here, but since I was already using it in ArcMap, it was easy for me to simply export the attribute table to excel. If I was doing this strictly following reproducible standards, I am sure there would be a way to code through all of those steps!
+
+This attribute table contains the following headers:
+
+1. FID
+2. Permanent_
+3. FDate
+4. GNIS_ID
+5. GNIS_Name
+6. LengthKM
+7. ReachCode
+8. FlowDir
+9. WBArea_Per
+10. FType
+11. FCode
+12. MainPath
+13. InNetwork
+14. Visibility
+15. Shape_Leng
+16. NHDPlusID
+17. VPUID
+18. Enabled
+19. AreasqKM
+20. TotDAsqKm
+21. Slope
+22. MaxElevSmo
+23. MinElevSmo
+24. BFwidth
+
+However, I am only interested in the following:
+
+1. **FID** (reaches numbered from 0 to 10753)
+2. **LengthKM** (the length of each reach in kilometers)
+3. **InNetwork** (this tells me if the reach is in the actual stream network, or if it is a human made connector (i.e. a canal or gravel pond))
+4. **TotDASqKm** (tells me the total drainage area of that reach in square kilometers)
+5. **Slope** (slope of that reach)
+6. **MaxElevSmo** (maximum elevation in feet of that reach)
+7. **MinElevSmo** (minimum elevation in feet of that reach)
+8. **BFwidth** (the average bankfull width of that reach)
+
+There is code (that we talked about in class, I know!) that will allow me to load only the columns I want into my table. For this assignment, however, I mannually deleted the columns that I did not want in excel, and then saved as a CSV file. 
+
+## Table creation
+
+To create the table "reach_attributes"
+
+```{r table creation, eval=FALSE, echo=TRUE}
+dbExecute(St.Vrain_db, "CREATE TABLE reach_attributes (
+          FID float,
+          LengthKM float,
+          InNetwork float,
+          TotDASqKm float,
+          Slope float,
+          MaxElevSmo float,
+          MInElevSmo float,
+          BFwidth float
+          );")
+
+```
+
+## Loading the data
+
+To load the data from the CSV into the table:
+
+```{r data loading, eval=FALSE, echo=TRUE}
+
+reach_attributes <- read.csv("NHD_US_drainage.csv", stringsAsFactors = FALSE)
+
+dbWriteTable(St.Vrain_db, "reach_attributes", reach_attributes, append = TRUE)
+
+```
+
+

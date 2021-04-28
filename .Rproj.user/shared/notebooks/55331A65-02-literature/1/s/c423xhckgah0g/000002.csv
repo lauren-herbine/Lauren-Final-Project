@@ -1,0 +1,2 @@
+"0","knitr::opts_chunk$set(eval = FALSE, echo = TRUE)"
+"0","St.Vrain_db <- dbConnect(RSQLite::SQLite(), ""St.Vrain.db"")"

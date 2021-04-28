@@ -1,0 +1,13 @@
+"0","knitr::opts_chunk$set(eval = FALSE, echo = TRUE)"
+"0","dbExecute(St.Vrain_db, ""CREATE TABLE reach_attributes ("
+"0","          FID float,"
+"0","          LengthKM float,"
+"0","          InNetwork float,"
+"0","          TotDASqKm float,"
+"0","          Slope float,"
+"0","          MaxElevSmo float,"
+"0","          MInElevSmo float,"
+"0","          BFwidth float"
+"0","          );"")"
+"2","Error: table reach_attributes already exists
+"
